@@ -1,0 +1,18 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card-header {
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.btn-primary {
+    font-weight: bold;
+    border-radius: 8px;
+}
+
+.form-label {
+    font-weight: 500;
+}
