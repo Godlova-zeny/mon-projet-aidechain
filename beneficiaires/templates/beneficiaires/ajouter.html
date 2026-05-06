@@ -1,111 +1,660 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Nouveau bénéficiaire</title>
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Ton CSS personnalisé -->
-    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+{% extends 'base.html' %}
+{% block title %}Nouveau bénéficiaire{% endblock %}
+{% block content %}
+<style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #E6A817;
+      --gold-light: #f0b820;
+      --gold-dim: #b8841a;
+      --bg-app: #0f1117;
+      --bg-sidebar: #13161f;
+      --bg-topbar: #1a1d2e;
+      --bg-card: #13161f;
+      --bg-input: #0a0c14;
+      --border: #2a2d3a;
+      --text-primary: #e0e3f0;
+      --text-secondary: #8b8fa8;
+      --text-muted: #5a5e73;
+      --text-dim: #4a4e63;
+      --danger-bg: #2a0f0f;
+      --danger-border: #7f1f1f;
+      --danger-text: #f87171;
+      --success-bg: #0d2a1a;
+      --success-border: #1a6b3a;
+      --success-text: #4ade80;
+      --font: 'Segoe UI', system-ui, sans-serif;
+      --mono: 'Courier New', monospace;
+    }
+
+    body {
+      font-family: var(--font);
+      background: #080a10;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px;
+      color: var(--text-primary);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1100px;
+      background: var(--bg-app);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      grid-template-rows: 52px 1fr;
+      min-height: 680px;
+    }
+
+    /* TOPBAR */
+    .topbar {
+      grid-column: 1 / -1;
+      background: var(--bg-topbar);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 20px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo { display: flex; align-items: center; gap: 9px; }
+    .logo-icon {
+      width: 30px; height: 30px;
+      background: var(--gold);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon i { font-size: 16px; color: #0f1117; }
+    .logo-text { font-size: 17px; font-weight: 600; color: #fff; }
+    .logo-text span { color: var(--gold); }
+
+    .topnav { display: flex; gap: 4px; margin-left: 24px; }
+    .topnav button {
+      padding: 6px 14px; font-size: 13px;
+      color: var(--text-secondary);
+      border: none; background: none;
+      border-radius: 6px; cursor: pointer;
+      font-family: var(--font);
+      transition: background 0.15s, color 0.15s;
+    }
+    .topnav button:hover { background: #1e2130; color: #ccc; }
+    .topnav button.active { background: var(--gold); color: #0f1117; font-weight: 600; }
+
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .agent-text { text-align: right; }
+    .agent-name { font-size: 13px; font-weight: 500; color: #fff; }
+    .agent-org { font-size: 11px; color: var(--text-muted); }
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #0f1117;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      background: var(--bg-sidebar);
+      border-right: 0.5px solid var(--border);
+      padding: 18px 0;
+    }
+    .sidebar-section { padding: 0 12px; margin-bottom: 22px; }
+    .sidebar-label {
+      font-size: 10px; color: var(--text-dim);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0 8px; margin-bottom: 6px;
+    }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 10px; border-radius: 7px;
+      cursor: pointer; font-size: 13px;
+      color: var(--text-secondary);
+      border: none; background: none;
+      width: 100%; text-align: left;
+      font-family: var(--font);
+      transition: background 0.15s, color 0.15s;
+    }
+    .sidebar-item:hover { background: #1e2130; color: #ccc; }
+    .sidebar-item.active { background: #1e2130; color: var(--gold); }
+    .sidebar-item i { font-size: 15px; }
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--gold); color: #0f1117;
+      font-size: 10px; font-weight: 700;
+      border-radius: 10px; padding: 1px 6px;
+    }
+
+    /* MAIN */
+    .main { padding: 22px 26px; overflow-y: auto; background: var(--bg-app); }
+    .page-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+    .page-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 22px; }
+
+    /* STATS */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .stat-card { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+    .stat-num { font-size: 22px; font-weight: 600; color: var(--gold); }
+    .stat-num.green { color: var(--success-text); }
+    .stat-num.red { color: var(--danger-text); }
+    .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* FORM CARD */
+    .form-card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 22px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: 11px; color: var(--text-dim);
+      font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .field input, .field select {
+      background: var(--bg-input);
+      border: 0.5px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 13px; padding: 9px 11px;
+      outline: none; font-family: var(--font);
+      transition: border-color 0.15s;
+    }
+    .field input:focus, .field select:focus { border-color: var(--gold); }
+    .field input::placeholder { color: #2a2d3a; }
+    .field select option { background: #13161f; }
+
+    /* HASH BOX */
+    .hash-box {
+      background: var(--bg-input);
+      border: 0.5px solid var(--border);
+      border-radius: 7px;
+      padding: 11px 13px;
+      margin-bottom: 14px;
+    }
+    .hash-label {
+      font-size: 10px; color: var(--gold);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .hash-value {
+      font-size: 11px; color: var(--text-dim);
+      font-family: var(--mono);
+      word-break: break-all; line-height: 1.5;
+    }
+    .hash-value.ready { color: var(--gold); }
+
+    /* VERIFY BUTTON */
+    .verify-btn {
+      width: 100%; padding: 10px;
+      background: #1a1d2e;
+      border: 0.5px solid var(--gold);
+      color: var(--gold);
+      font-size: 13px; font-weight: 600;
+      border-radius: 7px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: var(--font);
+      transition: background 0.15s;
+      margin-bottom: 14px;
+    }
+    .verify-btn:hover { background: #222540; }
+    .verify-btn i { font-size: 15px; }
+
+    /* RESULT BOX */
+    .result-box {
+      border-radius: 7px; padding: 13px 15px;
+      margin-bottom: 14px; display: none;
+    }
+    .result-box.show { display: flex; gap: 11px; align-items: flex-start; }
+    .result-box.doublon { background: var(--danger-bg); border: 0.5px solid var(--danger-border); }
+    .result-box.ok { background: var(--success-bg); border: 0.5px solid var(--success-border); }
+    .result-icon { font-size: 19px; margin-top: 1px; flex-shrink: 0; }
+    .result-box.doublon .result-icon { color: var(--danger-text); }
+    .result-box.ok .result-icon { color: var(--success-text); }
+    .result-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+    .result-box.doublon .result-title { color: var(--danger-text); }
+    .result-box.ok .result-title { color: var(--success-text); }
+    .result-text { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+
+    .doublon-detail {
+      background: var(--bg-app);
+      border: 0.5px solid var(--border);
+      border-radius: 6px; padding: 9px 11px; margin-top: 9px;
+    }
+    .dd-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 12px; }
+    .dd-label { color: var(--text-muted); }
+    .dd-val { color: var(--text-primary); font-weight: 500; }
+
+    /* AIDE CHIPS */
+    .chips-label { font-size: 11px; color: var(--text-dim); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 9px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .chip {
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 12px; cursor: pointer;
+      border: 0.5px solid var(--border);
+      background: var(--bg-app);
+      color: var(--text-secondary);
+      font-family: var(--font);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .chip:hover { border-color: var(--gold-dim); color: var(--gold); }
+    .chip.selected { background: var(--gold); color: #0f1117; border-color: var(--gold); font-weight: 600; }
+
+    /* SUBMIT */
+    .submit-btn {
+      width: 100%; padding: 12px;
+      background: var(--gold); border: none;
+      color: #0f1117; font-size: 14px; font-weight: 700;
+      border-radius: 7px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      font-family: var(--font);
+      transition: background 0.15s;
+    }
+    .submit-btn:hover { background: var(--gold-light); }
+    .submit-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
+    .submit-btn i { font-size: 16px; }
+
+    /* SUCCESS BANNER */
+    .success-bar {
+      background: var(--success-bg);
+      border: 0.5px solid var(--success-border);
+      border-radius: 7px; padding: 13px 15px;
+      display: none; align-items: center; gap: 11px;
+      margin-bottom: 14px;
+    }
+    .success-bar.show { display: flex; }
+    .success-bar i { color: var(--success-text); font-size: 20px; flex-shrink: 0; }
+    .success-title { font-size: 13px; font-weight: 600; color: var(--success-text); }
+    .success-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* HISTORY TAB */
+    .history-list { display: flex; flex-direction: column; gap: 8px; }
+    .history-item {
+      background: var(--bg-card); border: 0.5px solid var(--border);
+      border-radius: 8px; padding: 12px 14px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .h-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #1a1d2e;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: var(--gold); flex-shrink: 0;
+    }
+    .h-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .h-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .h-right { margin-left: auto; text-align: right; }
+    .h-badge {
+      font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500;
+      display: inline-block;
+    }
+    .h-badge.alim { background: #2a1a05; color: #EF9F27; }
+    .h-badge.med { background: #05152a; color: #378ADD; }
+    .h-badge.cash { background: #0d2a1a; color: #4ade80; }
+    .h-badge.wash { background: #1a0530; color: #AFA9EC; }
+    .h-date { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 2px; margin-bottom: 20px; border-bottom: 0.5px solid var(--border); }
+    .tab {
+      padding: 9px 16px; font-size: 13px; cursor: pointer;
+      border: none; background: none; color: var(--text-secondary);
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      font-family: var(--font); transition: color 0.15s;
+    }
+    .tab.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 600; }
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
+    /* FOOTER */
+    .footer-bar {
+      grid-column: 1 / -1;
+      background: var(--bg-topbar);
+      border-top: 0.5px solid var(--border);
+      padding: 8px 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .footer-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success-text); }
+    .footer-text { font-size: 11px; color: var(--text-muted); }
+    .footer-ong { margin-left: auto; font-size: 11px; color: var(--text-dim); }
+
+    @media (max-width: 700px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .form-row, .form-row-3 { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
 </head>
-<body class="bg-light">
+<body>
 
-<div class="container mt-5">
-    <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">Nouveau bénéficiaire</h3>
-        </div>
-        <div class="card-body">
-            <form method="post" action="{% url 'ajouter_beneficiaire' %}">
-                {% csrf_token %}
+<div class="app">
 
-                <!-- Nom -->
-                <div class="mb-3">
-                    <label class="form-label">Nom de famille</label>
-                    <input type="text" name="nom" class="form-control" required>
-                </div>
-
-                <!-- Prénom -->
-                <div class="mb-3">
-                    <label class="form-label">Prénom</label>
-                    <input type="text" name="prenom" class="form-control" required>
-                </div>
-
-                <!-- Genre -->
-                <div class="mb-3">
-                    <label class="form-label">Genre</label>
-                    <select name="genre" class="form-select" required>
-                        <option value="Masculin">Masculin</option>
-                        <option value="Féminin">Féminin</option>
-                    </select>
-                </div>
-
-                <!-- Date de naissance -->
-                <div class="mb-3">
-                    <label class="form-label">Date de naissance</label>
-                    <input type="date" name="date_naissance" class="form-control" required>
-                </div>
-
-                <!-- Village / Communauté -->
-                <div class="mb-3">
-                    <label class="form-label">Village / Communauté</label>
-                    <input type="text" name="zone" class="form-control" required>
-                </div>
-
-                <!-- Tuteur -->
-                <div class="mb-3">
-                    <label class="form-label">Proche (Tuteur/Garant)</label>
-                    <input type="text" name="tuteur" class="form-control">
-                </div>
-
-                <!-- Numéro identité -->
-                <div class="mb-3">
-                    <label class="form-label">Numéro d'identité</label>
-                    <input type="text" name="numero_identite" class="form-control" required>
-                </div>
-
-                <!-- UUID Blockchain -->
-                {% if uuid_genere %}
-                <div class="alert alert-info">
-                    <strong>UUID Blockchain généré :</strong> {{ uuid_genere }}
-                </div>
-                {% endif %}
-
-                <!-- Message de doublon -->
-                {% if message %}
-                <div class="alert alert-danger">
-                    {{ message }}
-                </div>
-                {% endif %}
-
-                <!-- Type d’aide -->
-                <div class="mb-3">
-                    <label class="form-label">Type d’aide</label>
-                    <div class="btn-group d-flex" role="group">
-                        <input type="radio" class="btn-check" name="type_aide" id="alimentaire" value="Alimentaire" checked>
-                        <label class="btn btn-outline-success flex-fill" for="alimentaire">Alimentaire</label>
-
-                        <input type="radio" class="btn-check" name="type_aide" id="cash" value="Cash">
-                        <label class="btn btn-outline-warning flex-fill" for="cash">Cash</label>
-
-                        <input type="radio" class="btn-check" name="type_aide" id="medical" value="Médical">
-                        <label class="btn btn-outline-danger flex-fill" for="medical">Médical</label>
-
-                        <input type="radio" class="btn-check" name="type_aide" id="wash" value="WASH">
-                        <label class="btn btn-outline-info flex-fill" for="wash">WASH</label>
-
-                        <input type="radio" class="btn-check" name="type_aide" id="education" value="Éducation">
-                        <label class="btn btn-outline-primary flex-fill" for="education">Éducation</label>
-                    </div>
-                </div>
-
-                <!-- Bouton -->
-                <button type="submit" class="btn btn-primary w-100">Enregistrer</button>
-            </form>
-        </div>
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon"><i class="ti ti-link"></i></div>
+      <span class="logo-text">Aide<span>Chain</span></span>
     </div>
+    <div class="topnav">
+      <button onclick="window.location.href='{% url 'dashboard' %}'">Tableau de bord</button>
+      <button class="active">Enregistrement</button>
+      <button onclick="alert('Distributions — Phase 2 à venir')">Distributions</button>
+      <button onclick="alert('Rapports — Phase 2 à venir')">Rapports</button>
+    </div>
+    <div class="topbar-right">
+      <div class="agent-text">
+        <div class="agent-name">Amina Oumar</div>
+        <div class="agent-org">MSF Tchad</div>
+      </div>
+      <div class="avatar">AO</div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <button class="sidebar-item"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
+      <button class="sidebar-item active"><i class="ti ti-user-plus"></i> Enregistrement <span class="sidebar-badge">!</span></button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Gestion</div>
+      <button class="sidebar-item"><i class="ti ti-package"></i> Distributions</button>
+      <button class="sidebar-item"><i class="ti ti-clock"></i> Historique</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Coordination</div>
+      <button class="sidebar-item"><i class="ti ti-map"></i> Carte zones</button>
+      <button class="sidebar-item"><i class="ti ti-file-analytics"></i> Rapports</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Admin</div>
+      <button class="sidebar-item"><i class="ti ti-settings"></i> Paramètres</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="page-title">Nouveau bénéficiaire</div>
+    <div class="page-sub">Enregistrez un bénéficiaire — vérification doublon automatique via blockchain</div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num green" id="stat-total">47</div>
+        <div class="stat-label">Bénéficiaires enregistrés</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num red" id="stat-doublons">3</div>
+        <div class="stat-label">Doublons détectés</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">6</div>
+        <div class="stat-label">ONG connectées au réseau</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('register', this)"><i class="ti ti-user-plus" style="margin-right:5px;font-size:14px;vertical-align:-2px;"></i>Enregistrer</button>
+      <button class="tab" onclick="switchTab('history', this)"><i class="ti ti-list" style="margin-right:5px;font-size:14px;vertical-align:-2px;"></i>Historique</button>
+    </div>
+
+    <!-- TAB ENREGISTREMENT -->
+    <div id="tab-register" class="tab-section active">
+      <div class="form-card">
+
+        <div class="form-row">
+          <div class="field">
+            <label>Nom de famille</label>
+            <input type="text" id="f-nom" placeholder="Ex : Hassan" oninput="onFormChange()" />
+          </div>
+          <div class="field">
+            <label>Prénom</label>
+            <input type="text" id="f-prenom" placeholder="Ex : Fatima" oninput="onFormChange()" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Genre</label>
+            <select id="f-genre">
+              <option value="">— Sélectionner —</option>
+              <option>Féminin</option>
+              <option>Masculin</option>
+              <option>Non précisé</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Date de naissance</label>
+            <input type="date" id="f-dob" oninput="onFormChange()" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Village / Communauté</label>
+            <input type="text" id="f-village" placeholder="Ex : Abéché — Ouaddaï" />
+          </div>
+          <div class="field">
+            <label>Proche (tuteur / garant)</label>
+            <input type="text" id="f-proche" placeholder="Ex : Ali Hassan" />
+          </div>
+        </div>
+
+        <div class="hash-box">
+          <div class="hash-label"><i class="ti ti-lock" style="font-size:11px;margin-right:4px;"></i> UUID blockchain généré (SHA-256) — données anonymisées</div>
+          <div class="hash-value" id="hash-display">Remplissez le formulaire pour générer l'empreinte cryptographique...</div>
+        </div>
+
+        <button class="verify-btn" onclick="checkDoublon()">
+          <i class="ti ti-search"></i> Vérifier dans le registre blockchain
+        </button>
+
+        <div id="result-box" class="result-box"></div>
+
+        <div id="success-bar" class="success-bar">
+          <i class="ti ti-circle-check"></i>
+          <div>
+            <div class="success-title">Bénéficiaire enregistré avec succès</div>
+            <div class="success-sub" id="success-msg"></div>
+          </div>
+        </div>
+
+        <div class="chips-label">Type d'aide à distribuer</div>
+        <div class="chips">
+          <div class="chip" onclick="toggleChip(this)">Alimentaire</div>
+          <div class="chip" onclick="toggleChip(this)">Cash</div>
+          <div class="chip" onclick="toggleChip(this)">Médical</div>
+          <div class="chip" onclick="toggleChip(this)">WASH</div>
+          <div class="chip" onclick="toggleChip(this)">Éducation</div>
+          <div class="chip" onclick="toggleChip(this)">Abri</div>
+          <div class="chip" onclick="toggleChip(this)">NFI</div>
+        </div>
+
+        <button class="submit-btn" id="btn-submit" disabled onclick="submitBenef()">
+          <i class="ti ti-device-floppy"></i> Enregistrer dans AideChain
+        </button>
+
+      </div>
+    </div>
+
+    <!-- TAB HISTORIQUE -->
+    <div id="tab-history" class="tab-section">
+      <div class="history-list" id="history-list"></div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-bar">
+    <div class="footer-dot"></div>
+    <span class="footer-text">Réseau AideChain actif — 6 ONG connectées — Registre partagé opérationnel</span>
+    <span class="footer-ong">MIABE Hackathon 2026 · Projet TD-01</span>
+  </div>
+
 </div>
 
-</body>
-</html>
+<script>
+  const REGISTRY = [
+    { nom: 'Hassan', prenom: 'Fatima', dob: '1989-03-12', village: 'Abéché', ong: 'UNICEF Tchad', aide: 'Alimentaire', date: '03/03/2026', uuid: 'a3f4b2c1e9d87456b81c234a8e9f0d12c7b3a8e4f68d91c2b5a7f3e8d9c8b1a4' },
+    { nom: 'Mahamat', prenom: 'Amina', dob: '1992-07-18', village: "N'Djaména", ong: 'WFP', aide: 'Cash', date: '15/02/2026', uuid: 'b7c3d2e1f0a9856741b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4' },
+    { nom: 'Idriss', prenom: 'Moussa', dob: '1985-11-30', village: 'Sarh', ong: 'MSF', aide: 'Médical', date: '22/04/2026', uuid: 'c8d4e3f2a1b0976852c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5' },
+    { nom: 'Ali', prenom: 'Khadidja', dob: '1998-05-22', village: 'Moundou', ong: 'UNHCR', aide: 'Abri', date: '10/01/2026', uuid: 'd9e5f4a3b2c1087963d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6' },
+    { nom: 'Brahim', prenom: 'Oumar', dob: '1978-09-14', village: 'Bol', ong: 'IRC', aide: 'WASH', date: '28/03/2026', uuid: 'e0f6a5b4c3d2198074e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7' },
+  ];
+
+  let localHistory = [
+    { nom: 'Koné', prenom: 'Mariam', village: "N'Djaména", aide: 'Alimentaire', date: '01/05/2026', id: 'TC-01122' },
+    { nom: 'Djibrine', prenom: 'Moussa', village: 'Abéché', aide: 'Médical', date: '03/05/2026', id: 'TC-01133' },
+  ];
+
+  let canSubmit = false;
+
+  function simHash(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
+    const base = Math.abs(h).toString(16).padStart(8, '0');
+    return (base.repeat(8)).slice(0, 64);
+  }
+
+  function normalize(s) {
+    return (s || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').trim();
+  }
+
+  function onFormChange() {
+    const nom = document.getElementById('f-nom').value;
+    const prenom = document.getElementById('f-prenom').value;
+    const dob = document.getElementById('f-dob').value;
+    const hd = document.getElementById('hash-display');
+    if (nom && prenom) {
+      hd.textContent = simHash(nom.toLowerCase() + prenom.toLowerCase() + (dob || ''));
+      hd.className = 'hash-value ready';
+    } else {
+      hd.textContent = "Remplissez le formulaire pour générer l'empreinte cryptographique...";
+      hd.className = 'hash-value';
+    }
+    canSubmit = false;
+    document.getElementById('btn-submit').disabled = true;
+    document.getElementById('result-box').className = 'result-box';
+    document.getElementById('success-bar').classList.remove('show');
+  }
+
+  function checkDoublon() {
+    const nom = document.getElementById('f-nom').value.trim();
+    const prenom = document.getElementById('f-prenom').value.trim();
+    const box = document.getElementById('result-box');
+    document.getElementById('success-bar').classList.remove('show');
+
+    if (!nom || !prenom) {
+      box.className = 'result-box show doublon';
+      box.innerHTML = `<i class="ti ti-alert-triangle result-icon"></i><div><div class="result-title">Champs requis manquants</div><div class="result-text">Le nom et le prénom sont obligatoires pour effectuer la vérification.</div></div>`;
+      document.getElementById('btn-submit').disabled = true;
+      canSubmit = false;
+      return;
+    }
+
+    const match = REGISTRY.find(r =>
+      normalize(r.nom) === normalize(nom) &&
+      normalize(r.prenom) === normalize(prenom)
+    );
+
+    if (match) {
+      document.getElementById('stat-doublons').textContent =
+        parseInt(document.getElementById('stat-doublons').textContent) + 1;
+      box.className = 'result-box show doublon';
+      box.innerHTML = `
+        <i class="ti ti-alert-octagon result-icon"></i>
+        <div style="flex:1">
+          <div class="result-title">Doublon détecté sur la blockchain</div>
+          <div class="result-text">Ce bénéficiaire est déjà enregistré par <strong style="color:#f87171">${match.ong}</strong> — aide ${match.aide}, le ${match.date}. UUID identique trouvé dans le registre partagé.</div>
+          <div class="doublon-detail">
+            <div class="dd-row"><span class="dd-label">UUID blockchain</span><span class="dd-val" style="font-family:monospace;font-size:11px;">${match.uuid.slice(0, 32)}…</span></div>
+            <div class="dd-row"><span class="dd-label">Organisation source</span><span class="dd-val">${match.ong}</span></div>
+            <div class="dd-row"><span class="dd-label">Type d'aide reçue</span><span class="dd-val">${match.aide}</span></div>
+            <div class="dd-row"><span class="dd-label">Date d'enregistrement</span><span class="dd-val">${match.date}</span></div>
+            <div class="dd-row"><span class="dd-label">Localité</span><span class="dd-val">${match.village}</span></div>
+          </div>
+        </div>`;
+      document.getElementById('btn-submit').disabled = true;
+      canSubmit = false;
+    } else {
+      box.className = 'result-box show ok';
+      box.innerHTML = `<i class="ti ti-circle-check result-icon"></i><div><div class="result-title">Aucun doublon — bénéficiaire nouveau</div><div class="result-text">Aucune correspondance dans le registre partagé des 6 ONG connectées. Vous pouvez procéder à l'enregistrement.</div></div>`;
+      document.getElementById('btn-submit').disabled = false;
+      canSubmit = true;
+    }
+  }
+
+  function toggleChip(el) { el.classList.toggle('selected'); }
+
+  function submitBenef() {
+    if (!canSubmit) return;
+    const nom = document.getElementById('f-nom').value.trim();
+    const prenom = document.getElementById('f-prenom').value.trim();
+    const village = document.getElementById('f-village').value || 'Non précisé';
+    const hash = document.getElementById('hash-display').textContent;
+    const selected = [...document.querySelectorAll('.chip.selected')].map(c => c.textContent);
+    const aide = selected.length ? selected.join(', ') : 'Non précisé';
+    const today = new Date().toLocaleDateString('fr-FR');
+    const newId = 'TC-0' + (1200 + localHistory.length + 1);
+
+    localHistory.push({ nom, prenom, village, aide, date: today, id: newId });
+    document.getElementById('stat-total').textContent =
+      parseInt(document.getElementById('stat-total').textContent) + 1;
+
+    document.getElementById('result-box').className = 'result-box';
+    const sb = document.getElementById('success-bar');
+    sb.classList.add('show');
+    document.getElementById('success-msg').textContent =
+      `${prenom} ${nom} — ID : ${newId} — Bloc ajouté le ${today} · UUID : ${hash.slice(0, 20)}…`;
+
+    ['f-nom','f-prenom','f-dob','f-village','f-proche'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-genre').value = '';
+    document.getElementById('hash-display').textContent = "Remplissez le formulaire pour générer l'empreinte cryptographique...";
+    document.getElementById('hash-display').className = 'hash-value';
+    document.querySelectorAll('.chip.selected').forEach(c => c.classList.remove('selected'));
+    document.getElementById('btn-submit').disabled = true;
+    canSubmit = false;
+  }
+
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'history') renderHistory();
+  }
+
+  function renderHistory() {
+    const all = [
+      ...REGISTRY.map(r => ({ nom: r.nom, prenom: r.prenom, village: r.village, aide: r.aide, date: r.date, id: r.uuid.slice(0,10).toUpperCase(), ong: r.ong })),
+      ...localHistory.map(r => ({ ...r, ong: 'MSF Tchad (vous)' }))
+    ].reverse();
+
+    const badgeClass = a => {
+      if (a === 'Alimentaire') return 'alim';
+      if (a === 'Médical') return 'med';
+      if (a === 'Cash') return 'cash';
+      return 'wash';
+    };
+
+    document.getElementById('history-list').innerHTML = all.map(b => `
+      <div class="history-item">
+        <div class="h-avatar">${b.prenom[0]}${b.nom[0]}</div>
+        <div>
+          <div class="h-name">${b.prenom} ${b.nom}</div>
+          <div class="h-meta">${b.village} · ${b.ong} · ${b.id}</div>
+        </div>
+        <div class="h-right">
+          <span class="h-badge ${badgeClass(b.aide)}">${b.aide}</span>
+          <div class="h-date">${b.date}</div>
+        </div>
+      </div>`).join('');
+  }
+</script>
+
+{% endblock %}

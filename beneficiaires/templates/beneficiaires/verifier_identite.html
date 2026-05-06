@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block title %}Vérifier identité{% endblock %}
+
+{% block content %}
+<div class="mobile-page">
+  <div class="mobile-topbar">
+    <div class="brand-icon">A</div>
+    <div>
+      <div class="brand-title">Aide<span>Chain</span></div>
+      <div class="brand-subtitle">Vérification</div>
+    </div>
+  </div>
+
+  <div class="mobile-header">
+    <h1>Vérifier un numéro</h1>
+    <p>Testez un numéro d'identité avant ré-enregistrement.</p>
+  </div>
+
+  <form id="check-form" novalidate>
+    <label for="numero">Numéro d’identité</label>
+    <input id="numero" name="numero" type="text" placeholder="Ex : 12345678" required>
+    <div id="status-message" class="doublon-info"></div>
+    <button type="button" id="check-button">Vérifier</button>
+  </form>
+
+  <div class="demo-note">
+    <p><strong>Démo live :</strong> ONG A enregistre un bénéficiaire sur <code>/beneficiaires/ajouter/</code>, puis ONG B vérifie le même numéro ici.</p>
+  </div>
+</div>
+
+<style>
+.mobile-page {
+  max-width: 480px;
+  margin: 0 auto;
+  background: #0f1117;
+  border: 1px solid #2a2d3a;
+  border-radius: 16px;
+  padding: 18px;
+  color: #e0e3f0;
+}
+.mobile-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #e6a817;
+  color: #0f1117;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+.brand-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+.brand-title span {
+  color: #e6a817;
+}
+.brand-subtitle {
+  font-size: 12px;
+  color: #8b8fa8;
+  margin-top: 2px;
+}
+.mobile-header h1 {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+.mobile-header p {
+  font-size: 13px;
+  color: #8b8fa8;
+  margin-bottom: 18px;
+}
+label {
+  display: block;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #8b8fa8;
+}
+input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #2a2d3a;
+  background: #13161f;
+  color: #e0e3f0;
+  font-size: 14px;
+}
+button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #e6a817;
+  color: #0f1117;
+  font-weight: 700;
+  cursor: pointer;
+}
+.doublon-info {
+  min-height: 22px;
+  margin-top: 6px;
+  font-size: 13px;
+}
+.doublon-info.ok { color: #4ade80; }
+.doublon-info.error { color: #f87171; }
+.demo-note {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #8b8fa8;
+}
+.demo-note code {
+  background: rgba(230, 168, 23, 0.12);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+</style>
+
+<script>
+const numeroField = document.getElementById('numero');
+const statusMessage = document.getElementById('status-message');
+const checkButton = document.getElementById('check-button');
+
+checkButton.addEventListener('click', () => {
+  const numero = numeroField.value.trim();
+  if (!numero) {
+    statusMessage.textContent = 'Entrez un numéro d’identité.';
+    statusMessage.className = 'doublon-info error';
+    return;
+  }
+
+  fetch(`{% url 'check_identite' %}?numero=${encodeURIComponent(numero)}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.doublon) {
+        statusMessage.textContent = 'Doublon détecté : ce numéro existe déjà dans le registre.';
+        statusMessage.className = 'doublon-info error';
+      } else {
+        statusMessage.textContent = 'Aucun doublon trouvé. Le numéro est libre.';
+        statusMessage.className = 'doublon-info ok';
+      }
+    })
+    .catch(() => {
+      statusMessage.textContent = 'Impossible de vérifier le numéro pour le moment.';
+      statusMessage.className = 'doublon-info error';
+    });
+});
+</script>
+{% endblock %}

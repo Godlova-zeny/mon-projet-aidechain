@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block title %}Agent terrain{% endblock %}
+
+{% block content %}
+<div class="mobile-page">
+  <div class="mobile-topbar">
+    <div class="brand-icon">A</div>
+    <div>
+      <div class="brand-title">Aide<span>Chain</span></div>
+      <div class="brand-subtitle">Agent terrain</div>
+    </div>
+  </div>
+  <div class="mobile-header">
+    <h1>Agent terrain</h1>
+    <p>Vérifie le doublon en temps réel avant l’inscription.</p>
+  </div>
+
+  {% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <form id="mobile-form" method="post" novalidate>
+    {% csrf_token %}
+    <label for="nom">Nom</label>
+    <input id="nom" name="nom" type="text" placeholder="Ex : Hassan" required>
+
+    <label for="prenom">Prénom</label>
+    <input id="prenom" name="prenom" type="text" placeholder="Ex : Fatima" required>
+
+    <label for="zone">Zone / Village</label>
+    <input id="zone" name="zone" type="text" placeholder="Ex : Goz Beida" required>
+
+    <label for="type_aide">Type d’aide</label>
+    <select id="type_aide" name="type_aide" required>
+      <option value="">Sélectionner</option>
+      <option value="Alimentaire">Alimentaire</option>
+      <option value="Cash">Cash</option>
+      <option value="Médical">Médical</option>
+      <option value="WASH">WASH</option>
+      <option value="Éducation">Éducation</option>
+    </select>
+
+    <label for="numero_identite">Numéro d’identité</label>
+    <input id="numero_identite" name="numero_identite" type="text" placeholder="Ex : 12345678" required>
+    <div id="doublon-message" class="doublon-info"></div>
+
+    <button type="submit" id="submit-button">Enregistrer</button>
+  </form>
+</div>
+
+<style>
+.mobile-page {
+  max-width: 480px;
+  margin: 0 auto;
+  background: #0f1117;
+  border: 1px solid #2a2d3a;
+  border-radius: 16px;
+  padding: 18px;
+  color: #e0e3f0;
+}
+.mobile-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #e6a817;
+  color: #0f1117;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  font-size: 18px;
+}
+.brand-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+.brand-title span {
+  color: #e6a817;
+}
+.brand-subtitle {
+  font-size: 12px;
+  color: #8b8fa8;
+  margin-top: 2px;
+}
+.mobile-header h1 {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+.mobile-header p {
+  font-size: 13px;
+  color: #8b8fa8;
+  margin-bottom: 18px;
+}
+label {
+  display: block;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #8b8fa8;
+}
+input, select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #2a2d3a;
+  background: #13161f;
+  color: #e0e3f0;
+  font-size: 14px;
+}
+input:focus, select:focus {
+  outline: 2px solid #e6a817;
+}
+button {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: #e6a817;
+  color: #0f1117;
+  font-weight: 700;
+  cursor: pointer;
+}
+button:disabled {
+  background: #3a3f51;
+  cursor: not-allowed;
+}
+.doublon-info {
+  min-height: 22px;
+  margin-top: 6px;
+  font-size: 13px;
+}
+.doublon-info.ok { color: #4ade80; }
+.doublon-info.error { color: #f87171; }
+.alert {
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+.alert-success { background: #152d18; color: #84cc16; }
+.alert-error { background: #2b1010; color: #f87171; }
+</style>
+
+<script>
+const numeroInput = document.getElementById('numero_identite');
+const doublonMessage = document.getElementById('doublon-message');
+const submitButton = document.getElementById('submit-button');
+let lastNumero = '';
+
+numeroInput.addEventListener('input', () => {
+    const value = numeroInput.value.trim();
+    if (!value || value === lastNumero) {
+        doublonMessage.textContent = '';
+        doublonMessage.className = 'doublon-info';
+        submitButton.disabled = false;
+        return;
+    }
+    lastNumero = value;
+    fetch(`{% url 'check_identite' %}?numero=${encodeURIComponent(value)}`)
+      .then(response => response.json())
+      .then(data => {
+          if (data.doublon) {
+              doublonMessage.textContent = 'Doublon détecté : ce numéro existe déjà.';
+              doublonMessage.className = 'doublon-info error';
+              submitButton.disabled = true;
+          } else {
+              doublonMessage.textContent = 'Numéro valide, enregistrement possible.';
+              doublonMessage.className = 'doublon-info ok';
+              submitButton.disabled = false;
+          }
+      })
+      .catch(() => {
+          doublonMessage.textContent = 'Impossible de vérifier le numéro pour le moment.';
+          doublonMessage.className = 'doublon-info error';
+          submitButton.disabled = false;
+      });
+});
+</script>
+{% endblock %}

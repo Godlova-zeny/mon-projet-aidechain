@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AideChain — Tableau de bord OCHA</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #E6A817;
+      --gold-light: #f0b820;
+      --bg-app: #0f1117;
+      --bg-sidebar: #13161f;
+      --bg-topbar: #1a1d2e;
+      --bg-card: #13161f;
+      --bg-input: #0a0c14;
+      --border: #2a2d3a;
+      --text-primary: #e0e3f0;
+      --text-secondary: #8b8fa8;
+      --text-muted: #5a5e73;
+      --text-dim: #3a3e52;
+      --danger-bg: #2a0f0f;
+      --danger-border: #7f1f1f;
+      --danger-text: #f87171;
+      --success-bg: #0d2a1a;
+      --success-border: #1a6b3a;
+      --success-text: #4ade80;
+      --warn-bg: #2a1a05;
+      --warn-border: #7f4f05;
+      --warn-text: #fb923c;
+      --font: 'Segoe UI', system-ui, sans-serif;
+      --mono: 'Courier New', monospace;
+    }
+
+    body {
+      font-family: var(--font);
+      background: #080a10;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px;
+      color: var(--text-primary);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1100px;
+      background: var(--bg-app);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: var(--bg-topbar);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 20px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo { display: flex; align-items: center; gap: 9px; }
+    .logo-icon { width: 30px; height: 30px; background: var(--gold); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+    .logo-icon i { font-size: 16px; color: #0f1117; }
+    .logo-text { font-size: 17px; font-weight: 600; color: #fff; }
+    .logo-text span { color: var(--gold); }
+    .ocha-badge { font-size: 11px; padding: 3px 9px; border-radius: 4px; background: #1a2a1a; border: 0.5px solid #1a6b3a; color: #4ade80; margin-left: 6px; }
+    .lecture-badge { font-size: 11px; padding: 3px 9px; border-radius: 4px; background: #2a1a05; border: 0.5px solid var(--warn-border); color: var(--warn-text); }
+
+    .topnav { display: flex; gap: 4px; margin-left: 20px; }
+    .topnav button { padding: 6px 14px; font-size: 13px; color: var(--text-secondary); border: none; background: none; border-radius: 6px; cursor: pointer; font-family: var(--font); transition: background 0.15s, color 0.15s; }
+    .topnav button:hover { background: #1e2130; color: #ccc; }
+    .topnav button.active { background: var(--gold); color: #0f1117; font-weight: 600; }
+    .topnav button.alert-btn { position: relative; }
+    .alert-dot { position: absolute; top: 4px; right: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--danger-text); }
+
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+    .agent-text { text-align: right; }
+    .agent-name { font-size: 13px; font-weight: 500; color: #fff; }
+    .agent-org { font-size: 11px; color: var(--text-muted); }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; }
+
+    /* ── MAIN CONTENT ── */
+    .main { padding: 22px 24px; }
+
+    /* ── KPI CARDS ── */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+    .kpi-card { border-radius: 8px; padding: 14px 16px; text-align: center; }
+    .kpi-card.gold { background: var(--gold); }
+    .kpi-card.dark { background: #1a1d2e; border: 0.5px solid var(--border); }
+    .kpi-card.danger { background: var(--danger-bg); border: 0.5px solid var(--danger-border); }
+    .kpi-card.warn { background: var(--warn-bg); border: 0.5px solid var(--warn-border); }
+    .kpi-num { font-size: 26px; font-weight: 700; line-height: 1.1; }
+    .kpi-card.gold .kpi-num { color: #0f1117; }
+    .kpi-card.dark .kpi-num { color: #fff; }
+    .kpi-card.danger .kpi-num { color: var(--danger-text); }
+    .kpi-card.warn .kpi-num { color: var(--warn-text); }
+    .kpi-label { font-size: 11px; margin-top: 4px; }
+    .kpi-card.gold .kpi-label { color: rgba(0,0,0,0.6); }
+    .kpi-card.dark .kpi-label { color: var(--text-muted); }
+    .kpi-card.danger .kpi-label { color: #a87070; }
+    .kpi-card.warn .kpi-label { color: #a87040; }
+
+    /* ── TWO-COL LAYOUT ── */
+    .two-col { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 14px; margin-bottom: 16px; }
+
+    /* ── MAP CARD ── */
+    .map-card { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 10px; padding: 16px; }
+    .card-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .card-title i { color: var(--gold); font-size: 15px; }
+
+    .map-svg-wrap { position: relative; width: 100%; }
+    .map-legend { display: flex; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel { display: flex; flex-direction: column; gap: 12px; }
+
+    /* ── CHART CARD ── */
+    .chart-card { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 10px; padding: 16px; }
+    .chart-bars { display: flex; align-items: flex-end; gap: 10px; height: 100px; padding: 0 4px; }
+    .bar-col { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; }
+    .bar { width: 100%; border-radius: 4px 4px 0 0; transition: opacity 0.2s; cursor: pointer; }
+    .bar:hover { opacity: 0.8; }
+    .bar-label { font-size: 11px; color: var(--text-muted); }
+    .bar-val { font-size: 11px; color: var(--text-secondary); }
+
+    /* ── ALERTS CARD ── */
+    .alerts-card { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 10px; padding: 16px; }
+    .alert-item { background: var(--bg-app); border: 0.5px solid var(--border); border-radius: 7px; padding: 10px 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+    .alert-item:last-child { margin-bottom: 0; }
+    .alert-dot2 { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .alert-dot2.red { background: var(--danger-text); }
+    .alert-dot2.orange { background: var(--warn-text); }
+    .alert-zone { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .alert-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .alert-days { margin-left: auto; font-size: 11px; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+    .alert-days.red { background: var(--danger-bg); border: 0.5px solid var(--danger-border); color: var(--danger-text); }
+    .alert-days.orange { background: var(--warn-bg); border: 0.5px solid var(--warn-border); color: var(--warn-text); }
+
+    /* ── BLOCKCHAIN TABLE ── */
+    .table-card { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { font-size: 10px; color: var(--text-dim); letter-spacing: 0.07em; text-transform: uppercase; padding: 0 10px 10px; text-align: left; border-bottom: 0.5px solid var(--border); }
+    tbody tr { border-bottom: 0.5px solid #1a1d2e; transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #1a1d2e; }
+    tbody td { padding: 10px; font-size: 12px; color: var(--text-secondary); }
+    .uuid-cell { font-family: var(--mono); font-size: 11px; color: var(--gold); }
+    .org-cell { font-weight: 500; color: var(--text-primary); }
+    .aide-badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; display: inline-block; }
+    .aide-badge.alim { background: #2a1a05; color: #EF9F27; }
+    .aide-badge.cash { background: #0d2a1a; color: #4ade80; }
+    .aide-badge.med { background: #05152a; color: #60a5fa; }
+    .aide-badge.wash { background: #1a0530; color: #c084fc; }
+    .aide-badge.abri { background: #1a1205; color: #fbbf24; }
+    .statut-badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 500; }
+    .statut-badge.nouveau { background: var(--success-bg); border: 0.5px solid var(--success-border); color: var(--success-text); }
+    .statut-badge.doublon { background: var(--danger-bg); border: 0.5px solid var(--danger-border); color: var(--danger-text); }
+
+    /* ── FOOTER ── */
+    .footer-bar { background: var(--bg-topbar); border-top: 0.5px solid var(--border); padding: 8px 20px; display: flex; align-items: center; gap: 8px; }
+    .footer-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success-text); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .footer-text { font-size: 11px; color: var(--text-muted); }
+    .footer-right { margin-left: auto; font-size: 11px; color: var(--text-dim); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon"><i class="ti ti-link"></i></div>
+      <span class="logo-text">Aide<span>Chain</span></span>
+    </div>
+    <span class="ocha-badge">OCHA</span>
+    <span class="lecture-badge">Lecture seule</span>
+    <div class="topnav">
+      <button class="active">Vue globale</button>
+      <button>Par organisation</button>
+      <button class="alert-btn">Alertes <span class="alert-dot"></span></button>
+    </div>
+    <div class="topbar-right">
+      <div class="agent-text">
+        <div class="agent-name">Ibrahim Saleh</div>
+        <div class="agent-org">Coordinateur OCHA</div>
+      </div>
+      <div class="avatar">IS</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- KPI -->
+    <div class="kpi-row">
+      <div class="kpi-card gold">
+        <div class="kpi-num">47 382</div>
+        <div class="kpi-label">Bénéficiaires uniques</div>
+      </div>
+      <div class="kpi-card dark">
+        <div class="kpi-num">23</div>
+        <div class="kpi-label">ONG actives</div>
+      </div>
+      <div class="kpi-card danger">
+        <div class="kpi-num">2 847</div>
+        <div class="kpi-label">Doublons détectés</div>
+      </div>
+      <div class="kpi-card warn">
+        <div class="kpi-num">12</div>
+        <div class="kpi-label">Zones non couvertes</div>
+      </div>
+    </div>
+
+    <!-- MAP + RIGHT PANEL -->
+    <div class="two-col">
+
+      <!-- MAP -->
+      <div class="map-card">
+        <div class="card-title"><i class="ti ti-map-pin"></i> Couverture géographique — Tchad</div>
+        <div class="map-svg-wrap">
+          <svg viewBox="0 0 380 310" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:6px;background:#0a0c14;border:0.5px solid #2a2d3a;">
+
+            <!-- Tchad outline approximatif -->
+            <path d="M 120 20 L 200 18 L 260 30 L 290 60 L 310 100 L 320 140 L 310 180 L 290 220 L 260 270 L 220 295 L 180 290 L 140 280 L 110 250 L 80 210 L 60 170 L 55 130 L 65 90 L 85 55 Z"
+              fill="#13161f" stroke="#2a2d3a" stroke-width="1.5"/>
+
+            <!-- Lac Tchad -->
+            <ellipse cx="90" cy="110" rx="22" ry="16" fill="#1a3a5a" stroke="#2a4a6a" stroke-width="1" opacity="0.7"/>
+            <text x="90" y="114" text-anchor="middle" font-size="7" fill="#4a8ab0" font-family="sans-serif">Lac Tchad</text>
+
+            <!-- Régions colorées selon couverture -->
+            <!-- N'Djaména - bien couverte -->
+            <circle cx="118" cy="155" r="28" fill="#0d2a1a" stroke="#1a6b3a" stroke-width="1" opacity="0.5"/>
+            <!-- Abéché - bien couverte -->
+            <circle cx="248" cy="130" r="24" fill="#0d2a1a" stroke="#1a6b3a" stroke-width="1" opacity="0.5"/>
+            <!-- Moundou - partielle -->
+            <circle cx="148" cy="235" r="22" fill="#2a1a05" stroke="#7f4f05" stroke-width="1" opacity="0.5"/>
+            <!-- Sarh - partielle -->
+            <circle cx="210" cy="240" r="20" fill="#2a1a05" stroke="#7f4f05" stroke-width="1" opacity="0.5"/>
+            <!-- Faya-Largeau - non couverte -->
+            <circle cx="218" cy="60" r="22" fill="#2a0f0f" stroke="#7f1f1f" stroke-width="1" opacity="0.5"/>
+            <!-- Bol - bien couverte -->
+            <circle cx="100" cy="108" r="16" fill="#0d2a1a" stroke="#1a6b3a" stroke-width="1" opacity="0.4"/>
+            <!-- Am Timan - non couverte -->
+            <circle cx="268" cy="205" r="18" fill="#2a0f0f" stroke="#7f1f1f" stroke-width="1" opacity="0.5"/>
+            <!-- Doba - non couverte -->
+            <circle cx="165" cy="265" r="16" fill="#2a0f0f" stroke="#7f1f1f" stroke-width="1" opacity="0.5"/>
+
+            <!-- Markers villes -->
+            <!-- N'Djaména -->
+            <circle cx="118" cy="155" r="9" fill="#4ade80" stroke="#0d2a1a" stroke-width="2"/>
+            <text x="118" y="172" text-anchor="middle" font-size="8.5" fill="#e0e3f0" font-family="sans-serif" font-weight="600">N'Djam.</text>
+
+            <!-- Abéché -->
+            <circle cx="248" cy="130" r="8" fill="#4ade80" stroke="#0d2a1a" stroke-width="2"/>
+            <text x="248" y="146" text-anchor="middle" font-size="8" fill="#e0e3f0" font-family="sans-serif">Abéché</text>
+
+            <!-- Moundou -->
+            <circle cx="148" cy="235" r="8" fill="#fb923c" stroke="#2a1a05" stroke-width="2"/>
+            <text x="148" y="251" text-anchor="middle" font-size="8" fill="#e0e3f0" font-family="sans-serif">Moundou</text>
+
+            <!-- Sarh -->
+            <circle cx="210" cy="240" r="7" fill="#fb923c" stroke="#2a1a05" stroke-width="2"/>
+            <text x="210" y="255" text-anchor="middle" font-size="8" fill="#e0e3f0" font-family="sans-serif">Sarh</text>
+
+            <!-- Faya-Largeau -->
+            <circle cx="218" cy="60" r="8" fill="#f87171" stroke="#2a0f0f" stroke-width="2"/>
+            <text x="218" y="75" text-anchor="middle" font-size="8" fill="#e0e3f0" font-family="sans-serif">Faya-L.</text>
+
+            <!-- Bol -->
+            <circle cx="100" cy="108" r="7" fill="#4ade80" stroke="#0d2a1a" stroke-width="2"/>
+            <text x="100" y="123" text-anchor="middle" font-size="8" fill="#e0e3f0" font-family="sans-serif">Bol</text>
+
+            <!-- Am Timan -->
+            <circle cx="268" cy="205" r="7" fill="#f87171" stroke="#2a0f0f" stroke-width="2"/>
+            <text x="268" y="220" text-anchor="middle" font-size="8" fill="#e0e3f0" font-family="sans-serif">Am Timan</text>
+
+            <!-- Doba -->
+            <circle cx="165" cy="265" r="7" fill="#f87171" stroke="#2a0f0f" stroke-width="2"/>
+            <text x="165" y="280" text-anchor="middle" font-size="8" fill="#e0e3f0" font-family="sans-serif">Doba</text>
+
+            <!-- Libellés pays voisins -->
+            <text x="60" y="40" font-size="8" fill="#3a3e52" font-family="sans-serif">Libye</text>
+            <text x="310" y="80" font-size="8" fill="#3a3e52" font-family="sans-serif">Soudan</text>
+            <text x="60" y="270" font-size="8" fill="#3a3e52" font-family="sans-serif">Cameroun</text>
+            <text x="280" y="280" font-size="8" fill="#3a3e52" font-family="sans-serif">RCA</text>
+            <text x="68" y="160" font-size="8" fill="#3a3e52" font-family="sans-serif">Niger</text>
+          </svg>
+        </div>
+        <div class="map-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div> Bien couverte — ONG actives</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div> Partielle</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div> Aucune aide reçue</div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="right-panel">
+
+        <!-- CHART -->
+        <div class="chart-card">
+          <div class="card-title"><i class="ti ti-chart-bar"></i> Aides par type — 30 derniers jours</div>
+          <div class="chart-bars" id="chart-bars">
+            <!-- généré par JS -->
+          </div>
+        </div>
+
+        <!-- ALERTES ZONES VIDES -->
+        <div class="alerts-card">
+          <div class="card-title" style="color:var(--danger-text);"><i class="ti ti-alert-triangle" style="color:var(--danger-text);"></i> Alertes zones vides</div>
+          <div class="alert-item">
+            <div class="alert-dot2 red"></div>
+            <div>
+              <div class="alert-zone">Bitine — Borkou</div>
+              <div class="alert-desc">0 ONG — 45 jours sans aide</div>
+            </div>
+            <span class="alert-days red">45j</span>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot2 orange"></div>
+            <div>
+              <div class="alert-zone">Am Timan — Salamat</div>
+              <div class="alert-desc">1 ONG — Partielle seulement</div>
+            </div>
+            <span class="alert-days orange">30j</span>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot2 red"></div>
+            <div>
+              <div class="alert-zone">Doba — Logone Orient.</div>
+              <div class="alert-desc">0 ONG — 30 jours sans aide</div>
+            </div>
+            <span class="alert-days red">30j</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- BLOCKCHAIN TABLE -->
+    <div class="table-card">
+      <div class="card-title" style="margin-bottom:14px;"><i class="ti ti-link"></i> Dernières transactions blockchain</div>
+      <table>
+        <thead>
+          <tr>
+            <th>UUID (Tronqué)</th>
+            <th>Organisation</th>
+            <th>Type d'aide</th>
+            <th>Zone</th>
+            <th>Date</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody id="tx-body">
+          <!-- généré par JS -->
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-bar">
+    <div class="footer-dot"></div>
+    <span class="footer-text">Réseau AideChain actif — 23 ONG connectées — Synchronisation en temps réel</span>
+    <span class="footer-right">MIABE Hackathon 2026 · Projet TD-01 · AideChain</span>
+  </div>
+
+</div>
+
+<script>
+  // ── CHART BARS ──
+  const chartData = [
+    { label: 'Alim.', val: 18420, color: '#EF9F27' },
+    { label: 'Cash',  val: 12300, color: '#E6A817' },
+    { label: 'Méd.',  val: 8750,  color: '#60a5fa' },
+    { label: 'WASH',  val: 5200,  color: '#c084fc' },
+    { label: 'Abri',  val: 2712,  color: '#818cf8' },
+  ];
+  const maxVal = Math.max(...chartData.map(d => d.val));
+  const barsEl = document.getElementById('chart-bars');
+  chartData.forEach(d => {
+    const h = Math.round((d.val / maxVal) * 85);
+    barsEl.innerHTML += `
+      <div class="bar-col">
+        <div class="bar-val">${(d.val/1000).toFixed(1)}k</div>
+        <div class="bar" style="height:${h}px;background:${d.color};" title="${d.label}: ${d.val.toLocaleString('fr-FR')}"></div>
+        <div class="bar-label">${d.label}</div>
+      </div>`;
+  });
+
+  // ── TRANSACTIONS ──
+  const transactions = [
+    { uuid: 'a3f4b2c1...', org: 'MSF Tchad',   aide: 'Alimentaire', aideClass: 'alim', zone: 'Abéché',      date: '24/04/2026', statut: 'Nouveau',  statutClass: 'nouveau' },
+    { uuid: '9df7e1a2...', org: 'UNICEF',       aide: 'Cash',        aideClass: 'cash', zone: "N'Djamena",   date: '24/04/2026', statut: 'Doublon',  statutClass: 'doublon' },
+    { uuid: 'f2b6c3e8...', org: 'PAM',          aide: 'Alimentaire', aideClass: 'alim', zone: 'Moundou',     date: '23/04/2026', statut: 'Nouveau',  statutClass: 'nouveau' },
+    { uuid: 'c1a4f7b9...', org: 'IRC Tchad',    aide: 'Médical',     aideClass: 'med',  zone: 'Sarh',        date: '23/04/2026', statut: 'Nouveau',  statutClass: 'nouveau' },
+    { uuid: 'd8e2a1f3...', org: 'UNHCR',        aide: 'Abri',        aideClass: 'abri', zone: 'Bol',         date: '22/04/2026', statut: 'Nouveau',  statutClass: 'nouveau' },
+    { uuid: 'b5c9d4e7...', org: 'ACF Tchad',    aide: 'WASH',        aideClass: 'wash', zone: 'Am Timan',    date: '22/04/2026', statut: 'Doublon',  statutClass: 'doublon' },
+    { uuid: 'e3f1b8a6...', org: 'WFP',          aide: 'Alimentaire', aideClass: 'alim', zone: 'Faya-L.',     date: '21/04/2026', statut: 'Nouveau',  statutClass: 'nouveau' },
+  ];
+
+  const tbody = document.getElementById('tx-body');
+  transactions.forEach(tx => {
+    tbody.innerHTML += `
+      <tr>
+        <td class="uuid-cell">${tx.uuid}</td>
+        <td class="org-cell">${tx.org}</td>
+        <td><span class="aide-badge ${tx.aideClass}">${tx.aide}</span></td>
+        <td>${tx.zone}</td>
+        <td>${tx.date}</td>
+        <td><span class="statut-badge ${tx.statutClass}">${tx.statut}</span></td>
+      </tr>`;
+  });
+</script>
+
+</body>
+</html>
