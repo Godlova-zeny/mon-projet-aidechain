@@ -4,14 +4,15 @@ Django settings for AideChain project.
 
 from pathlib import Path
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Sécurité
-SECRET_KEY = 'django-insecure-gzwtnu8k3#_s&gvw#@6c_bvsp)m&3#38h1exstf0+-=^37en-1'
-DEBUG = True
-ALLOWED_HOSTS = []
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'votre-cle-de-secours')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = ['*'] # À restreindre plus tard avec votre nom de domaine
 
 # Applications installées
 INSTALLED_APPS = [
@@ -23,11 +24,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'beneficiaires',
+    'django_distill',
 ]
 
 # Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Pour les fichiers statiques
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -60,10 +63,10 @@ WSGI_APPLICATION = 'AideChain.wsgi.application'
 
 # Base de données
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        conn_max_age=600
+    )
 }
 
 # Validation des mots de passe
@@ -86,6 +89,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 STATIC_ROOT = BASE_DIR / "staticfiles"  # Collecte en production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Fichiers médias (si tu veux gérer des images uploadées)
 MEDIA_URL = '/media/'

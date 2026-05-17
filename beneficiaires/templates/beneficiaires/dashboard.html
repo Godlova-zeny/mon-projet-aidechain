@@ -203,16 +203,12 @@
     <!-- KPI -->
     <div class="kpi-row">
       <div class="kpi-card gold">
-        <div class="kpi-num">47 382</div>
+        <div class="kpi-num">{{ total }}</div>
         <div class="kpi-label">Bénéficiaires uniques</div>
       </div>
       <div class="kpi-card dark">
         <div class="kpi-num">23</div>
         <div class="kpi-label">ONG actives</div>
-      </div>
-      <div class="kpi-card danger">
-        <div class="kpi-num">2 847</div>
-        <div class="kpi-label">Doublons détectés</div>
       </div>
       <div class="kpi-card warn">
         <div class="kpi-num">12</div>
@@ -378,14 +374,30 @@
 </div>
 
 <script>
+  // Chargement des données locales (Netlify / Offline)
+  const localData = JSON.parse(localStorage.getItem('aidechain_local_db') || '[]');
+
+  // Mise à jour du compteur total en haut de page
+  const totalElement = document.querySelector('.kpi-card.gold .kpi-num');
+  if (totalElement) {
+      const totalBase = parseInt('{{ total }}') || 0;
+      totalElement.innerText = (totalBase + localData.length).toLocaleString();
+  }
+
   // ── CHART BARS ──
-  const chartData = [
-    { label: 'Alim.', val: 18420, color: '#EF9F27' },
-    { label: 'Cash',  val: 12300, color: '#E6A817' },
-    { label: 'Méd.',  val: 8750,  color: '#60a5fa' },
-    { label: 'WASH',  val: 5200,  color: '#c084fc' },
-    { label: 'Abri',  val: 2712,  color: '#818cf8' },
+  let chartData = [
+    {% for stat in stats_type %}
+    { label: '{{ stat.type_aide }}', val: {{ stat.count }}, color: '#EF9F27' },
+    {% endfor %}
   ];
+
+  // Fusionner les données locales dans le graphique
+  localData.forEach(entry => {
+      let match = chartData.find(d => d.label === entry.type_aide);
+      if (match) match.val += 1;
+      else chartData.push({ label: entry.type_aide, val: 1, color: '#60a5fa' });
+  });
+
   const maxVal = Math.max(...chartData.map(d => d.val));
   const barsEl = document.getElementById('chart-bars');
   chartData.forEach(d => {
@@ -399,15 +411,34 @@
   });
 
   // ── TRANSACTIONS ──
-  const transactions = [
-    { uuid: 'a3f4b2c1...', org: 'MSF Tchad',   aide: 'Alimentaire', aideClass: 'alim', zone: 'Abéché',      date: '24/04/2026', statut: 'Nouveau',  statutClass: 'nouveau' },
-    { uuid: '9df7e1a2...', org: 'UNICEF',       aide: 'Cash',        aideClass: 'cash', zone: "N'Djamena",   date: '24/04/2026', statut: 'Doublon',  statutClass: 'doublon' },
-    { uuid: 'f2b6c3e8...', org: 'PAM',          aide: 'Alimentaire', aideClass: 'alim', zone: 'Moundou',     date: '23/04/2026', statut: 'Nouveau',  statutClass: 'nouveau' },
-    { uuid: 'c1a4f7b9...', org: 'IRC Tchad',    aide: 'Médical',     aideClass: 'med',  zone: 'Sarh',        date: '23/04/2026', statut: 'Nouveau',  statutClass: 'nouveau' },
-    { uuid: 'd8e2a1f3...', org: 'UNHCR',        aide: 'Abri',        aideClass: 'abri', zone: 'Bol',         date: '22/04/2026', statut: 'Nouveau',  statutClass: 'nouveau' },
-    { uuid: 'b5c9d4e7...', org: 'ACF Tchad',    aide: 'WASH',        aideClass: 'wash', zone: 'Am Timan',    date: '22/04/2026', statut: 'Doublon',  statutClass: 'doublon' },
-    { uuid: 'e3f1b8a6...', org: 'WFP',          aide: 'Alimentaire', aideClass: 'alim', zone: 'Faya-L.',     date: '21/04/2026', statut: 'Nouveau',  statutClass: 'nouveau' },
+  let transactions = [
+    {% for b in recent %}
+    { 
+      uuid: '{{ b.numero_identite }}'.substring(0, 8) + '...', 
+      org: 'AideChain Node', 
+      aide: '{{ b.type_aide }}', 
+      aideClass: 'alim', 
+      zone: '{{ b.zone }}', 
+      date: 'Récemment', 
+      statut: 'Validé', 
+      statutClass: 'nouveau' 
+    },
+    {% endfor %}
   ];
+
+  // Insérer les données locales en haut de la table
+  localData.reverse().forEach(entry => {
+      transactions.unshift({
+          uuid: (entry.numero_identite || '').substring(0, 8) + '...',
+          org: 'Navigateur (Local)',
+          aide: entry.type_aide,
+          aideClass: 'cash',
+          zone: entry.zone,
+          date: entry.date_ajout || 'Aujourd\'hui',
+          statut: 'En attente',
+          statutClass: 'doublon' // Couleur orange pour distinguer le local
+      });
+  });
 
   const tbody = document.getElementById('tx-body');
   transactions.forEach(tx => {

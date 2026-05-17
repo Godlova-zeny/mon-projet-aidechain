@@ -8,29 +8,29 @@
       --gold: #E6A817;
       --gold-light: #f0b820;
       --gold-dim: #b8841a;
-      --bg-app: #0f1117;
-      --bg-sidebar: #13161f;
-      --bg-topbar: #1a1d2e;
-      --bg-card: #13161f;
-      --bg-input: #0a0c14;
-      --border: #2a2d3a;
-      --text-primary: #e0e3f0;
-      --text-secondary: #8b8fa8;
-      --text-muted: #5a5e73;
-      --text-dim: #4a4e63;
-      --danger-bg: #2a0f0f;
-      --danger-border: #7f1f1f;
-      --danger-text: #f87171;
-      --success-bg: #0d2a1a;
-      --success-border: #1a6b3a;
-      --success-text: #4ade80;
+      --bg-app: #0f1f3e;
+      --bg-sidebar: #122347;
+      --bg-topbar: #162d56;
+      --bg-card: #112e52;
+      --bg-input: #0b214a;
+      --border: #375ba4;
+      --text-primary: #f7fbff;
+      --text-secondary: #b8d1ff;
+      --text-muted: #94b2e8;
+      --text-dim: #d8e4ff;
+      --danger-bg: #3f1c1f;
+      --danger-border: #a63d4d;
+      --danger-text: #fb7a8f;
+      --success-bg: #113c29;
+      --success-border: #2b6a46;
+      --success-text: #6feaa2;
       --font: 'Segoe UI', system-ui, sans-serif;
       --mono: 'Courier New', monospace;
     }
 
     body {
       font-family: var(--font);
-      background: #080a10;
+      background: radial-gradient(circle at top, #142f5c 0%, #081021 60%);
       min-height: 100vh;
       display: flex;
       align-items: flex-start;
@@ -83,8 +83,8 @@
       font-family: var(--font);
       transition: background 0.15s, color 0.15s;
     }
-    .topnav button:hover { background: #1e2130; color: #ccc; }
-    .topnav button.active { background: var(--gold); color: #0f1117; font-weight: 600; }
+    .topnav button:hover { background: #1f3c70; color: #f2f7ff; }
+    .topnav button.active { background: #4e78e3; color: #ffffff; font-weight: 600; }
 
     .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
     .agent-text { text-align: right; }
@@ -119,8 +119,8 @@
       font-family: var(--font);
       transition: background 0.15s, color 0.15s;
     }
-    .sidebar-item:hover { background: #1e2130; color: #ccc; }
-    .sidebar-item.active { background: #1e2130; color: var(--gold); }
+    .sidebar-item:hover { background: #1f3c70; color: #f2f7ff; }
+    .sidebar-item.active { background: #244e91; color: #ffffff; }
     .sidebar-item i { font-size: 15px; }
     .sidebar-badge {
       margin-left: auto;
@@ -153,7 +153,7 @@
     .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
     .field { display: flex; flex-direction: column; gap: 5px; }
     .field label {
-      font-size: 11px; color: var(--text-dim);
+      font-size: 11px; color: var(--text-primary);
       font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
     }
     .field input, .field select {
@@ -165,9 +165,9 @@
       outline: none; font-family: var(--font);
       transition: border-color 0.15s;
     }
-    .field input:focus, .field select:focus { border-color: var(--gold); }
-    .field input::placeholder { color: #2a2d3a; }
-    .field select option { background: #13161f; }
+    .field input:focus, .field select:focus { border-color: #5f8ce8; }
+    .field input::placeholder { color: #9bb6e1; }
+    .field select option { background: #122347; color: var(--text-primary); }
 
     /* HASH BOX */
     .hash-box {
@@ -192,9 +192,9 @@
     /* VERIFY BUTTON */
     .verify-btn {
       width: 100%; padding: 10px;
-      background: #1a1d2e;
-      border: 0.5px solid var(--gold);
-      color: var(--gold);
+      background: #2f5fc4;
+      border: 0.5px solid #5f8ce8;
+      color: #ffffff;
       font-size: 13px; font-weight: 600;
       border-radius: 7px; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -202,7 +202,7 @@
       transition: background 0.15s;
       margin-bottom: 14px;
     }
-    .verify-btn:hover { background: #222540; }
+    .verify-btn:hover { background: #4b7ed6; }
     .verify-btn i { font-size: 15px; }
 
     /* RESULT BOX */
@@ -248,14 +248,14 @@
     /* SUBMIT */
     .submit-btn {
       width: 100%; padding: 12px;
-      background: var(--gold); border: none;
-      color: #0f1117; font-size: 14px; font-weight: 700;
+      background: #4a75e0; border: none;
+      color: #ffffff; font-size: 14px; font-weight: 700;
       border-radius: 7px; cursor: pointer;
       display: flex; align-items: center; justify-content: center; gap: 9px;
       font-family: var(--font);
       transition: background 0.15s;
     }
-    .submit-btn:hover { background: var(--gold-light); }
+    .submit-btn:hover { background: #5f8df2; }
     .submit-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
     .submit-btn i { font-size: 16px; }
 
@@ -602,7 +602,19 @@
     const today = new Date().toLocaleDateString('fr-FR');
     const newId = 'TC-0' + (1200 + localHistory.length + 1);
 
-    localHistory.push({ nom, prenom, village, aide, date: today, id: newId });
+    const entry = { nom, prenom, village, aide, date: today, id: newId };
+    localHistory.push(entry);
+
+    // Sauvegarde dans le localStorage pour persistance sur Netlify
+    let registreLocal = JSON.parse(localStorage.getItem('aidechain_local_db') || '[]');
+    registreLocal.push({
+        numero_identite: hash,
+        type_aide: aide.split(', ')[0], // Prend le premier type sélectionné
+        zone: village,
+        date_ajout: today
+    });
+    localStorage.setItem('aidechain_local_db', JSON.stringify(registreLocal));
+
     document.getElementById('stat-total').textContent =
       parseInt(document.getElementById('stat-total').textContent) + 1;
 

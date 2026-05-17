@@ -1,0 +1,6 @@
+[build]
+  publish = "dist"
+  command = "python manage.py distill-local --collectstatic dist --noinput"
+
+[build.environment]
+  PYTHON_VERSION = "3.11"

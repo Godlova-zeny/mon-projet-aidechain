@@ -15,13 +15,7 @@
     <p>Vérifie le doublon en temps réel avant l’inscription.</p>
   </div>
 
-  {% if messages %}
-  <div class="messages">
-    {% for message in messages %}
-      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">{{ message }}</div>
-    {% endfor %}
-  </div>
-  {% endif %}
+  <div id="js-messages"></div>
 
   <form id="mobile-form" method="post" novalidate>
     {% csrf_token %}
@@ -56,11 +50,11 @@
 .mobile-page {
   max-width: 480px;
   margin: 0 auto;
-  background: #0f1117;
-  border: 1px solid #2a2d3a;
+  background: #101b31;
+  border: 1px solid #2b3b62;
   border-radius: 16px;
   padding: 18px;
-  color: #e0e3f0;
+  color: #f5f9ff;
 }
 .mobile-topbar {
   display: flex;
@@ -72,8 +66,8 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: #e6a817;
-  color: #0f1117;
+  background: #4b7bff;
+  color: #ffffff;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -85,40 +79,45 @@
   font-weight: 700;
 }
 .brand-title span {
-  color: #e6a817;
+  color: #8bb7ff;
 }
 .brand-subtitle {
   font-size: 12px;
-  color: #8b8fa8;
+  color: #d7e3ff;
   margin-top: 2px;
 }
 .mobile-header h1 {
   font-size: 24px;
   margin-bottom: 4px;
+  color: #f5f9ff;
 }
 .mobile-header p {
   font-size: 13px;
-  color: #8b8fa8;
+  color: #d7e3ff;
   margin-bottom: 18px;
 }
 label {
   display: block;
   margin-top: 14px;
   font-size: 13px;
-  color: #8b8fa8;
+  color: #ffffff;
 }
 input, select {
   width: 100%;
   margin-top: 6px;
   padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid #2a2d3a;
-  background: #13161f;
-  color: #e0e3f0;
+  border: 1px solid #39588f;
+  background: #172743;
+  color: #f5f9ff;
   font-size: 14px;
 }
+input::placeholder,
+select option {
+  color: #b8c6ed;
+}
 input:focus, select:focus {
-  outline: 2px solid #e6a817;
+  outline: 2px solid #4b7bff;
 }
 button {
   width: 100%;
@@ -126,65 +125,87 @@ button {
   padding: 14px;
   border: none;
   border-radius: 12px;
-  background: #e6a817;
-  color: #0f1117;
+  background: #4b7bff;
+  color: #ffffff;
   font-weight: 700;
   cursor: pointer;
 }
 button:disabled {
-  background: #3a3f51;
+  background: #3a4f7c;
   cursor: not-allowed;
 }
 .doublon-info {
   min-height: 22px;
   margin-top: 6px;
   font-size: 13px;
+  color: #d7e3ff;
 }
-.doublon-info.ok { color: #4ade80; }
-.doublon-info.error { color: #f87171; }
+.doublon-info.ok { color: #6ee7b7; }
+.doublon-info.error { color: #fca5a5; }
 .alert {
   padding: 12px 14px;
   border-radius: 10px;
   margin-bottom: 14px;
   font-size: 13px;
 }
-.alert-success { background: #152d18; color: #84cc16; }
-.alert-error { background: #2b1010; color: #f87171; }
+.alert-success { background: #183a3c; color: #86efac; }
+.alert-error { background: #3a1d23; color: #fca5a5; }
 </style>
 
 <script>
 const numeroInput = document.getElementById('numero_identite');
 const doublonMessage = document.getElementById('doublon-message');
 const submitButton = document.getElementById('submit-button');
+const mobileForm = document.getElementById('mobile-form');
+const jsMessages = document.getElementById('js-messages');
 let lastNumero = '';
 
+// Vérification de doublon en temps réel (LocalStorage)
 numeroInput.addEventListener('input', () => {
     const value = numeroInput.value.trim();
     if (!value || value === lastNumero) {
         doublonMessage.textContent = '';
         doublonMessage.className = 'doublon-info';
-        submitButton.disabled = false;
         return;
     }
     lastNumero = value;
-    fetch(`{% url 'check_identite' %}?numero=${encodeURIComponent(value)}`)
-      .then(response => response.json())
-      .then(data => {
-          if (data.doublon) {
-              doublonMessage.textContent = 'Doublon détecté : ce numéro existe déjà.';
-              doublonMessage.className = 'doublon-info error';
-              submitButton.disabled = true;
-          } else {
-              doublonMessage.textContent = 'Numéro valide, enregistrement possible.';
-              doublonMessage.className = 'doublon-info ok';
-              submitButton.disabled = false;
-          }
-      })
-      .catch(() => {
-          doublonMessage.textContent = 'Impossible de vérifier le numéro pour le moment.';
-          doublonMessage.className = 'doublon-info error';
-          submitButton.disabled = false;
-      });
+
+    const registreLocal = JSON.parse(localStorage.getItem('aidechain_local_db') || '[]');
+    const existe = registreLocal.some(b => b.numero_identite === value);
+
+    if (existe) {
+        doublonMessage.textContent = 'Doublon détecté : ce numéro existe déjà.';
+        doublonMessage.className = 'doublon-info error';
+        submitButton.disabled = true;
+    } else {
+        doublonMessage.textContent = 'Numéro valide, enregistrement possible.';
+        doublonMessage.className = 'doublon-info ok';
+        submitButton.disabled = false;
+    }
+});
+
+// Enregistrement local (Mode Netlify)
+mobileForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const data = {
+        nom: document.getElementById('nom').value,
+        prenom: document.getElementById('prenom').value,
+        zone: document.getElementById('zone').value,
+        type_aide: document.getElementById('type_aide').value,
+        numero_identite: document.getElementById('numero_identite').value,
+        date_ajout: new Date().toLocaleDateString('fr-FR')
+    };
+
+    if (!data.nom || !data.numero_identite) return;
+
+    let registreLocal = JSON.parse(localStorage.getItem('aidechain_local_db') || '[]');
+    registreLocal.push(data);
+    localStorage.setItem('aidechain_local_db', JSON.stringify(registreLocal));
+
+    jsMessages.innerHTML = '<div class="alert alert-success">Bénéficiaire enregistré avec succès (Local).</div>';
+    mobileForm.reset();
+    doublonMessage.textContent = '';
 });
 </script>
 {% endblock %}

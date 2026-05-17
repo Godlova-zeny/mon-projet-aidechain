@@ -136,21 +136,16 @@ checkButton.addEventListener('click', () => {
     return;
   }
 
-  fetch(`{% url 'check_identite' %}?numero=${encodeURIComponent(numero)}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.doublon) {
-        statusMessage.textContent = 'Doublon détecté : ce numéro existe déjà dans le registre.';
-        statusMessage.className = 'doublon-info error';
-      } else {
-        statusMessage.textContent = 'Aucun doublon trouvé. Le numéro est libre.';
-        statusMessage.className = 'doublon-info ok';
-      }
-    })
-    .catch(() => {
-      statusMessage.textContent = 'Impossible de vérifier le numéro pour le moment.';
-      statusMessage.className = 'doublon-info error';
-    });
+  const registreLocal = JSON.parse(localStorage.getItem('aidechain_local_db') || '[]');
+  const existe = registreLocal.some(b => b.numero_identite === numero);
+
+  if (existe) {
+    statusMessage.textContent = 'Doublon détecté : ce numéro existe déjà dans le registre local.';
+    statusMessage.className = 'doublon-info error';
+  } else {
+    statusMessage.textContent = 'Aucun doublon trouvé. Le numéro est libre.';
+    statusMessage.className = 'doublon-info ok';
+  }
 });
 </script>
 {% endblock %}

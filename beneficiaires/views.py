@@ -1,10 +1,25 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.db.models import Count
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_http_methods
+from django.templatetags.static import static
 from .models import Beneficiaire
+import os
 
-# Vue du tableau de bord
+# Vue pour servir le service worker
+@require_http_methods(["GET"])
+def service_worker(request):
+    sw_path = os.path.join(os.path.dirname(__file__), 'static', 'service-worker.js')
+    with open(sw_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    response = HttpResponse(content, content_type='application/javascript')
+    # Pas de cache pour le service worker
+    response['Cache-Control'] = 'public, max-age=0, must-revalidate'
+    response['Pragma'] = 'no-cache'
+    return response
+
+# Vue do tableau de bord
 def dashboard(request):
     beneficiaires = Beneficiaire.objects.all()
     stats_type = Beneficiaire.objects.values('type_aide').annotate(count=Count('id')).order_by('-count')
